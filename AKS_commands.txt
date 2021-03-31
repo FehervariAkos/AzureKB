@@ -49,4 +49,23 @@ kubectl describe secret mongosecret --namespace ratingsapp
 
 # deploy ratings-api
 code ratings-api-deployment.yaml
-docker apply -f ratings-api-deployment.yaml
+kubectl apply -f ./ratings-api-deployment.yaml --namespace ratingsapp
+
+# create service for ratings-api
+code ratings-api-service.yaml
+# (...)
+kubectl apply --namespace ratingsapp -f ratings-api-service.yaml
+kubectl get service ratings-api --namespace ratingsapp
+kubectl get endpoints ratings-api --namespace ratingsapp
+
+# create ratings-web
+code ratings-web-deployment.yaml
+# (...)
+kubectl apply --namespace ratingsapp -f ratings-web-deployment.yaml
+
+# create service for ratings-web
+code ratings-web-service.yaml
+# (...)
+kubectl apply --namespace ratingsapp -f ratings-web-service.yaml
+
+kubectl get service ratings-web --namespace ratingsapp -w
