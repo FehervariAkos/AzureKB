@@ -22,7 +22,7 @@ kubectl get nodes
 kubectl get namespace
 kubectl create namespace ratingsapp
 
-
+# acr create
 $ACR_NAME="hundev18069acr1234"
 az acr create --resource-group $RESOURCE_GROUP --location $REGION_NAME --name $ACR_NAME --sku Standard
 
@@ -37,3 +37,16 @@ cd mslearn-aks-workshop-ratings-web
 az acr build --resource-group $RESOURCE_GROUP --registry $ACR_NAME --image ratings-web:v1 .
 
 az acr repository list --name $ACR_NAME --output table
+
+# connect/authenticate AKS to ACR
+az aks update --name $AKS_CLUSTER_NAME --resource-group $RESOURCE_GROUP --attach-acr $ACR_NAME
+
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+helm install ratings bitnami/mongodb --namespace ratingsapp --set auth.username="dbuser",auth.password="Password123",auth.database=ratingsdb
+kubectl create secret generic mongosecret --namespace ratingsapp --from-literal=MONGOCONNECTION="mongodb://dbuser:Password123@ratings-mongodb.ratingsapp:27017/ratingsdb"
+kubectl describe secret mongosecret --namespace ratingsapp
+
+# deploy ratings-api
+code ratings-api-deployment.yaml
+docker apply -f ratings-api-deployment.yaml
