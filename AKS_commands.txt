@@ -14,7 +14,7 @@ az network vnet create --resource-group $RESOURCE_GROUP --location $REGION_NAME 
 
 $SUBNET_ID=(az network vnet subnet show --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --name $SUBNET_NAME --query id -o tsv)
 $VERSION=(az aks get-versions --location $REGION_NAME --query 'orchestrators[?!isPreview] | [-1].orchestratorVersion' --output tsv)
-$AKS_CLUSTER_NAME="aksworkshop-$RANDOM"
+$AKS_CLUSTER_NAME="aksworkshop-1234"
 az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --vm-set-type VirtualMachineScaleSets --node-count 2 --load-balancer-sku standard --location $REGION_NAME --kubernetes-version $VERSION --network-plugin azure --vnet-subnet-id $SUBNET_ID --service-cidr 10.2.0.0/24 --dns-service-ip 10.2.0.10 --docker-bridge-address 172.17.0.1/16 --generate-ssh-keys
 
 az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME
@@ -22,5 +22,18 @@ kubectl get nodes
 kubectl get namespace
 kubectl create namespace ratingsapp
 
+
 $ACR_NAME="hundev18069acr1234"
 az acr create --resource-group $RESOURCE_GROUP --location $REGION_NAME --name $ACR_NAME --sku Standard
+
+# build ratings-api
+git clone https://github.com/MicrosoftDocs/mslearn-aks-workshop-ratings-api.git
+cd mslearn-aks-workshop-ratings-api
+az acr build --resource-group $RESOURCE_GROUP --registry $ACR_NAME --image ratings-api:v1 .
+
+# build ratings-web
+git clone https://github.com/MicrosoftDocs/mslearn-aks-workshop-ratings-web.git
+cd mslearn-aks-workshop-ratings-web
+az acr build --resource-group $RESOURCE_GROUP --registry $ACR_NAME --image ratings-web:v1 .
+
+az acr repository list --name $ACR_NAME --output table
