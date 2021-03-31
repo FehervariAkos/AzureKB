@@ -92,7 +92,41 @@ helm repo update
 kubectl apply --validate=false -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.14/deploy/manifests/00-crds.yaml
 helm install cert-manager --namespace cert-manager --version v0.14.0 jetstack/cert-manager
 kubectl get pods --namespace cert-manager
+code cluster-issuer.yaml
+# (...)
+kubectl apply --namespace ratingsapp -f cluster-issuer.yaml
 
+# Enable SSL/TLS for the ratings web service on Ingress
+code ratings-web-ingress.yaml
+kubectl apply --namespace ratingsapp -f ratings-web-ingress.yaml
+kubectl describe cert ratings-web-cert --namespace ratingsapp
 
+# Create a Log Analytics workspace
+$WORKSPACE="hun-dev-16069-laws-1234"
+az resource create --resource-type Microsoft.OperationalInsights/workspaces --name $WORKSPACE --resource-group $RESOURCE_GROUP --location $REGION_NAME --properties '{}' -o table
 
+# Enable the AKS monitoring add-on
+$WORKSPACE_ID=az resource show --resource-type Microsoft.OperationalInsights/workspaces --resource-group $RESOURCE_GROUP --name $WORKSPACE --query "id" -o tsv
+az aks enable-addons --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --addons monitoring --workspace-resource-id $WORKSPACE_ID
 
+# Configure Kubernetes RBAC to enable live log data
+code logreader-rbac.yaml
+# (...)
+kubectl apply-f logreader-rbac.yaml
+
+# Create the horizontal pod autoscaler
+code ratings-api-hpa.yaml
+# (...)
+kubectl apply --namespace ratingsapp -f ratings-api-hpa.yaml
+
+# Run a load test with horizontal pod autoscaler enabled
+$LOADTEST_API_ENDPOINT="https://frontend.20.73.137.176.nip.io/api/loadtest"
+az container create -g $RESOURCE_GROUP -n loadtest --cpu 4 --memory 1 --image azch/artillery --restart-policy Never --command-line "artillery quick -r 500 -d 120 $LOADTEST_API_ENDPOINT"
+kubectl get hpa --namespace ratingsapp -
+
+# Autoscale the cluster
+code ratings-api-deployment.yaml
+# (...)
+kubectl apply --namespace ratingsapp -f ratings-api-deployment.yaml
+kubectl get pods --namespace ratingsapp -l app=ratings-api -w
+az aks update --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --enable-cluster-autoscaler --min-count 3 --max-count 5
