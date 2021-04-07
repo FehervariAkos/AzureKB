@@ -1,0 +1,15 @@
+{
+    "id": "/subscriptions/cabe7cda-f1d8-4afe-ad02-ac6ceda1d075/resourceGroups/hun-dev-18069-rg",
+    "name": "hun-dev-18069-rg",
+    "location": "westeurope",
+    "tags": {
+        "ApplicationOwner": "18069 Fehérvári Ákos",
+        "CostCenter": "IT0000000446",
+        "DataOwner": "18069 Fehérvári Ákos",
+        "MainRG": "hun-dev-18069-rg",
+        "MaintenanceReboot": "Barmikor"
+    },
+    "properties": {
+        "provisioningState": "Succeeded"
+    }
+}
