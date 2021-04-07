@@ -1,2 +1,7 @@
 Set-AzureRmContext -SubscriptionName "hun-dev"
 New-AzureRmResourceGroup -Name HUN-DEV-18069-RG -Location "West Europe" -Tag @{ApplicationOwner="18069 Fehérvári Ákos"; CostCenter="IT0000000446"; DataOwner="18069 Fehérvári Ákos"; MainRG="hun-dev-18069-rg"; MaintenanceReboot="Barmikor"}
+
+az webapp list --output table
+az vm list --output table
+az find secret
+az network nsg --help
